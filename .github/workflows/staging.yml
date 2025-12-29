@@ -28,8 +28,8 @@ jobs:
       - name: Checkout blog repo
         uses: actions/checkout@v4
         with:
-          repository: Aspose/aspose-blog
-          ref: master
+          repository: shoaibkhan-aspose/blog.aspose.com-sk
+          ref: main
           token: ${{ secrets.REPO_TOKEN }}
           fetch-depth: 0
 
@@ -82,8 +82,8 @@ jobs:
       - name: Checkout blog repo
         uses: actions/checkout@v4
         with:
-          repository: Aspose/aspose-blog
-          ref: master
+          repository: shoaibkhan-aspose/blog.aspose.com-sk
+          ref: main
           token: ${{ secrets.REPO_TOKEN }}
 
       # --------------------------------------
