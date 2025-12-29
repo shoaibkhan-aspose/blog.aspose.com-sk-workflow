@@ -69,16 +69,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-product
     steps:
+      # MANDATORY: Clearing space so we can fit our ~20GB of artifacts
+      # - name: Free Disk Space
+      #   run: |
+      #     sudo rm -rf /usr/share/dotnet
+      #     sudo rm -rf /usr/local/lib/android
+      #     sudo rm -rf /opt/ghc
+
       # --------------------------------------
       # Checkout repo again
       # --------------------------------------
-      # MANDATORY: Clearing space so we can fit your ~20GB of artifacts
-      - name: Free Disk Space
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-
       - name: Checkout blog repo
         uses: actions/checkout@v4
         with:
