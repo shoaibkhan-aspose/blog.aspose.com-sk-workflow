@@ -130,7 +130,7 @@ jobs:
           hugo \
             --config "config.yml,config.staging.yml" \
             -b "https://blog-qa.aspose.com/" \
-            --disableKinds page,section \
+            --disableKinds section \
             --minify
 
       # --------------------------------------
