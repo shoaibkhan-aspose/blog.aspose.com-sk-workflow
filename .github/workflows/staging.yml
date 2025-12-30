@@ -189,7 +189,6 @@ jobs:
         run: |
           hugo deploy \
             --maxDeletes -1 \
-            --confirm \
             --config "config.yml,config.staging.yml" \
             --target "staging"
         env:
