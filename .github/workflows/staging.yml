@@ -58,6 +58,18 @@ jobs:
           fetch-depth: 0
 
       # --------------------------------------
+      # Cache Hugo resources
+      # --------------------------------------
+      - name: Cache Hugo resources
+        uses: actions/cache@v4
+        with:
+          path: |
+            resources/_gen
+            .hugo_build.lock
+          key: hugo-build-${{ matrix.product }}-${{ github.sha }}
+          restore-keys: |
+            hugo-build-${{ matrix.product }}-
+      # --------------------------------------
       # Setup Hugo
       # --------------------------------------
       - name: Setup Hugo
@@ -110,6 +122,18 @@ jobs:
           ref: main
           token: ${{ secrets.REPO_TOKEN }}
 
+      # --------------------------------------
+      # Cache Hugo resources
+      # --------------------------------------
+      - name: Cache Hugo resources
+        uses: actions/cache@v4
+        with:
+          path: |
+            resources/_gen
+            .hugo_build.lock
+          key: hugo-deploy-${{ github.sha }}
+          restore-keys: |
+            hugo-deploy-
       # --------------------------------------
       # Setup Hugo
       # --------------------------------------
@@ -164,6 +188,7 @@ jobs:
         run: |
           hugo deploy \
             --maxDeletes -1 \
+            --confirm \
             --config "config.yml,config.staging.yml" \
             --target "staging"
         env:
