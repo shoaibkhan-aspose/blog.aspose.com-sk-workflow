@@ -18,9 +18,33 @@ jobs:
       fail-fast: false
       matrix:
         product:
+          - 3d
+          - barcode
+          - cad
+          - cells
+          - diagram
+          - drawing
+          - email
           - finance
           - font
-
+          - gis
+          # - html
+          # - imaging
+          # - medical
+          # - note
+          # - ocr
+          # - omr
+          # - page
+          # - pdf
+          # - psd
+          # - pub
+          # - slides
+          # - svg
+          # - tasks
+          # - tex
+          # - total
+          # - words
+          # - zip
     steps:
       # --------------------------------------
       # Checkout blog repo
@@ -69,12 +93,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-product
     steps:
-      # MANDATORY: Clearing space so we can fit our ~20GB of artifacts
-      # - name: Free Disk Space
-      #   run: |
-      #     sudo rm -rf /usr/share/dotnet
-      #     sudo rm -rf /usr/local/lib/android
-      #     sudo rm -rf /opt/ghc
+      MANDATORY: Clearing space so we can fit our ~20GB of artifacts
+      - name: Free Disk Space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
 
       # --------------------------------------
       # Checkout repo again
