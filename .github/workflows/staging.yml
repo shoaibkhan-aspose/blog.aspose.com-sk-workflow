@@ -19,16 +19,16 @@ jobs:
       max-parallel: 4
       matrix:
         product:
-          - 3d
-          - barcode
-          - cad
-          - cells
-          - diagram
-          - drawing
-          - email
+          # - 3d
+          # - barcode
+          # - cad
+          # - cells
+          # - diagram
+          # - drawing
+          # - email
           - finance
           - font
-          - gis
+          # - gis
           # - html
           # - imaging
           # - medical
