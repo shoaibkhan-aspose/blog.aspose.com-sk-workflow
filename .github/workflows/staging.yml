@@ -1,4 +1,4 @@
-name: Staging
+name: Staging - AWS
 
 on:
   workflow_dispatch:
@@ -19,7 +19,7 @@ jobs:
           # - drawing
           # - email
           - finance
-          - font
+          # - font
           # - gis
           # - html
           # - imaging
@@ -76,22 +76,23 @@ jobs:
       # Build ONLY this product
       # --------------------------------------
       - name: Build & Deploy – ${{ matrix.product }}
+        env:
+          PRODUCT: ${{ matrix.product }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
         run: |
           hugo \
             --config "config.yml,config.staging.yml" \
             -b "https://blog-qa.aspose.com/" \
-            --contentDir content/Aspose.Blog/${{ matrix.product }} \
+            --contentDir content/Aspose.Blog/${PRODUCT} \
             --destination public \
             --disableKinds taxonomy,term \
             --minify
 
           hugo deploy \
             --config "config.yml,config.staging.yml" \
-            --target "staging-aws"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
-      
+            --target staging-aws \
+            --maxDeletes -1      
       # --------------------------------------
       # CloudFront Invalidation (ALL LANGUAGES FOR PRODUCT)
       # --------------------------------------
@@ -100,7 +101,7 @@ jobs:
         env:
           DISTRIBUTION: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_STAGING }}
           PATHS: |
-            /${{ matrix.product }}/*
+            /*
           AWS_REGION: us-west-2
           AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
