@@ -47,7 +47,7 @@ jobs:
         with:
           repository: shoaibkhan-aspose/blog.aspose.com-sk
           ref: main
-          token: ${{ secrets.REPO_TOKEN }}
+          token: ${{ github.token }}
           fetch-depth: 0
 
       # --------------------------------------
