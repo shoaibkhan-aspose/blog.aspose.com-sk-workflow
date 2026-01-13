@@ -1,0 +1,88 @@
+name: Staging – Global Pages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-global:
+    runs-on: ubuntu-latest
+
+    steps:
+      # --------------------------------------
+      # Checkout blog repo
+      # --------------------------------------
+      - name: Checkout blog repo
+        uses: actions/checkout@v4
+        with:
+          repository: shoaibkhan-aspose/blog.aspose.com-sk
+          ref: main
+          token: ${{ secrets.REPO_TOKEN }}
+          fetch-depth: 0
+
+      # --------------------------------------
+      # Cache Hugo resources
+      # --------------------------------------
+      - name: Cache Hugo resources
+        uses: actions/cache@v4
+        with:
+          path: |
+            resources/_gen
+            .hugo_build.lock
+          key: hugo-global-${{ hashFiles('config*.yml') }}
+          restore-keys: |
+            hugo-global-
+
+      # --------------------------------------
+      # Setup Hugo
+      # --------------------------------------
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.120.4'
+          extended: true
+
+      # --------------------------------------
+      # Build GLOBAL pages only
+      # --------------------------------------
+      - name: Build global pages
+        run: |
+          hugo \
+            --config "config.yml,config.staging.yml" \
+            -b "https://blog-qa.aspose.com/" \
+            --minify
+
+      # --------------------------------------
+      # Deploy ONLY global outputs
+      # --------------------------------------
+      - name: Deploy global pages to S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
+        run: |
+          hugo deploy \
+            --config "config.yml,config.staging.yml" \
+            --target staging-aws \
+            --maxDeletes 20
+
+      # --------------------------------------
+      # CloudFront invalidation (global only)
+      # --------------------------------------
+      - name: Invalidate CloudFront (global)
+        uses: chetan/invalidate-cloudfront-action@v2
+        env:
+          DISTRIBUTION: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_STAGING }}
+          PATHS: |
+            /
+            /index.html
+            /index.json
+            /sitemap.xml
+            /en/*
+            /ar/*
+            /cs/*
+            /categories/*
+            /tags/*
+            /archives/*
+            /search/*
+          AWS_REGION: us-west-2
+          AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
