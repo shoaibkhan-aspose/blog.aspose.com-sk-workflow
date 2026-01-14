@@ -76,28 +76,23 @@ jobs:
       # --------------------------------------
       # Build ONLY this product
       # --------------------------------------
-      - name: Build – ${{ matrix.product }}
-        env:
-          PRODUCT: ${{ matrix.product }}
-        run: |
-          hugo \
-            --config "config.yml,config.staging.yml" \
-            -b "https://blog-qa.aspose.com/" \
-            --contentDir content/Aspose.Blog/${PRODUCT} \
-            --destination public/${PRODUCT} \
-            --disableKinds taxonomy,term \
-            --minify
-
-      - name: Deploy product to S3
+      - name: Build & Deploy – ${{ matrix.product }}
         env:
           PRODUCT: ${{ matrix.product }}
           AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
         run: |
-          aws s3 sync \
-            public/${PRODUCT}/ \
-            s3://blog-qa.aspose.com/${PRODUCT}/ \
-            --delete     
+          hugo \
+            --config "config.yml,config.staging.yml" \
+            -b "https://blog-qa.aspose.com/" \
+            --contentDir content/Aspose.Blog/${PRODUCT} \
+            --disableKinds taxonomy,term \
+            --minify
+
+          hugo deploy \
+            --config "config.yml,config.staging.yml" \
+            --target staging-aws \
+            --maxDeletes -1      
       # --------------------------------------
       # CloudFront Invalidation (ALL LANGUAGES FOR PRODUCT)
       # --------------------------------------
