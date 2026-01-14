@@ -20,7 +20,7 @@ jobs:
           # - drawing
           # - email
           - finance
-          # - font
+          - font
           # - gis
           # - html
           # - imaging
