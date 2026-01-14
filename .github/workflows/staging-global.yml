@@ -1,0 +1,87 @@
+name: Staging - Home Assets
+
+on:
+  workflow_dispatch: # Run this manually or on a schedule
+
+jobs:
+  build-global:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout blog repo
+        uses: actions/checkout@v4
+        with:
+          repository: shoaibkhan-aspose/blog.aspose.com-sk
+          ref: main
+          token: ${{ secrets.REPO_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.120.4'
+          extended: true
+
+      # THE GOOD THING: Strip bodies so Hugo doesn't waste time rendering
+      - name: Strip Markdown Bodies
+        run: |
+          find content/Aspose.Blog -name "*.md" -type f -exec sed -i -e '/^---$/ { :a; n; /^---$/! ba; q }' {} +
+
+      - name: Build Skeleton Site
+        run: |
+          hugo \
+            --config "config.yml,config.staging.yml" \
+            -b "https://blog-qa.aspose.com/" \
+            --minify
+
+      - name: Deploy Global Assets (Surgical Sync)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
+        run: |
+          # SYNC EVERYTHING EXCEPT THE PRODUCT FOLDERS
+          # This catches Homepages, Sitemaps, Search Index, RSS, and CSS/JS automatically.
+          
+          # Deploy Global Assets while protecting all 27 Product folders
+            aws s3 sync public/ s3://blog-qa.aspose.com/ \
+            --exclude "3d/*" --exclude "*/3d/*" \
+            --exclude "barcode/*" --exclude "*/barcode/*" \
+            --exclude "cad/*" --exclude "*/cad/*" \
+            --exclude "cells/*" --exclude "*/cells/*" \
+            --exclude "diagram/*" --exclude "*/diagram/*" \
+            --exclude "drawing/*" --exclude "*/drawing/*" \
+            --exclude "email/*" --exclude "*/email/*" \
+            --exclude "finance/*" --exclude "*/finance/*" \
+            --exclude "font/*" --exclude "*/font/*" \
+            --exclude "gis/*" --exclude "*/gis/*" \
+            --exclude "html/*" --exclude "*/html/*" \
+            --exclude "imaging/*" --exclude "*/imaging/*" \
+            --exclude "medical/*" --exclude "*/medical/*" \
+            --exclude "note/*" --exclude "*/note/*" \
+            --exclude "ocr/*" --exclude "*/ocr/*" \
+            --exclude "omr/*" --exclude "*/omr/*" \
+            --exclude "page/*" --exclude "*/page/*" \
+            --exclude "pdf/*" --exclude "*/pdf/*" \
+            --exclude "psd/*" --exclude "*/psd/*" \
+            --exclude "pub/*" --exclude "*/pub/*" \
+            --exclude "slides/*" --exclude "*/slides/*" \
+            --exclude "svg/*" --exclude "*/svg/*" \
+            --exclude "tasks/*" --exclude "*/tasks/*" \
+            --exclude "tex/*" --exclude "*/tex/*" \
+            --exclude "total/*" --exclude "*/total/*" \
+            --exclude "words/*" --exclude "*/words/*" \
+            --exclude "zip/*" --exclude "*/zip/*" \
+            --follow-symlinks
+      
+      - name: Invalidate CloudFront
+        uses: chetan/invalidate-cloudfront-action@v2
+        env:
+          DISTRIBUTION: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_STAGING }}
+          PATHS: |
+            /index.html
+            /index.json
+            /sitemap.xml
+            /categories/*
+            /tags/*
+          AWS_REGION: us-west-2
+          AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
