@@ -16,7 +16,7 @@ jobs:
           # - barcode
           # - cad
           # - cells
-          # - diagram
+          - diagram
           # - drawing
           # - email
           - finance
