@@ -9,7 +9,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      max-parallel: 1
+      max-parallel: 4
       matrix:
         product:
           # - 3d
@@ -111,7 +111,8 @@ jobs:
         env:
           DISTRIBUTION: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_STAGING }}
           PATHS: |
-            /*
+            /${{ matrix.product }}/*
+            /*/${{ matrix.product }}/*
           AWS_REGION: us-west-2
           AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
