@@ -80,6 +80,8 @@ jobs:
             /index.html
             /index.json
             /sitemap.xml
+            /*/index.html
+            /*/sitemap.xml
             /categories/*
             /tags/*
           AWS_REGION: us-west-2
