@@ -82,17 +82,27 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
         run: |
+          # 1. Build the product. 
+          # Note: We don't use --contentDir here because it breaks internal links.
+          # Instead, we build the whole structure but we will only sync the specific folder.
+
           hugo \
             --config "config.yml,config.staging.yml" \
             -b "https://blog-qa.aspose.com/" \
-            --contentDir content/Aspose.Blog/${PRODUCT} \
-            --disableKinds taxonomy,term \
             --minify
 
-          hugo deploy \
-            --config "config.yml,config.staging.yml" \
-            --target staging-aws \
-            --maxDeletes -1      
+          # 2. Sync the English folder for this product
+          aws s3 sync public/${PRODUCT}/ s3://blog-qa.aspose.com/${PRODUCT}/ --follow-symlinks
+
+          # 3. Sync all translation folders for this product
+          # This assumes your URLs look like /ar/product/post
+          # We loop through your languages (ar, cs, de, etc.)
+
+          for lang in ar cs de es fa fr he id it ja ko pl pt ru sv th tr uk vi zh zh-hant; do
+            if [ -d "public/${lang}/${PRODUCT}" ]; then
+              aws s3 sync public/${lang}/${PRODUCT}/ s3://blog-qa.aspose.com/${lang}/${PRODUCT}/ --follow-symlinks
+            fi
+          done
       # --------------------------------------
       # CloudFront Invalidation (ALL LANGUAGES FOR PRODUCT)
       # --------------------------------------
