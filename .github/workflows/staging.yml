@@ -19,8 +19,8 @@ jobs:
           # - diagram
           # - drawing
           # - email
-          - finance
-          # - font
+          # - finance
+          - font
           # - gis
           # - html
           # - imaging
