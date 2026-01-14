@@ -12,14 +12,14 @@ jobs:
       max-parallel: 1
       matrix:
         product:
-          - 3d
-          - barcode
-          - cad
-          - cells
-          - diagram
+          # - 3d
+          # - barcode
+          # - cad
+          # - cells
+          # - diagram
           # - drawing
           # - email
-          - finance
+          # - finance
           - font
           # - gis
           # - html
