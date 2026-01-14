@@ -86,14 +86,12 @@ jobs:
             --config "config.yml,config.staging.yml" \
             -b "https://blog-qa.aspose.com/" \
             --contentDir content/Aspose.Blog/${PRODUCT} \
-            --destination "${PRODUCT}" \
             --disableKinds taxonomy,term \
             --minify
 
           hugo deploy \
             --config "config.yml,config.staging.yml" \
             --target staging-aws \
-            --destination "${PRODUCT}" \
             --maxDeletes -1      
       # --------------------------------------
       # CloudFront Invalidation (ALL LANGUAGES FOR PRODUCT)
