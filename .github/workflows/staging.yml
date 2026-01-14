@@ -28,7 +28,7 @@ jobs:
           # - note
           # - ocr
           # - omr
-          # - page
+          - page
           # - pdf
           # - psd
           # - pub
