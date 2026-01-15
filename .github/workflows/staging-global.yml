@@ -21,17 +21,36 @@ jobs:
           hugo-version: '0.120.4'
           extended: true
 
-      # THE GOOD THING: Strip bodies so Hugo doesn't waste time rendering
+      # 1. Strip bodies: : Strip bodies so Hugo doesn't waste time rendering
       - name: Strip Markdown Bodies
         run: |
           find content/Aspose.Blog -name "*.md" -type f -exec sed -i -e '/^---$/ { :a; n; /^---$/! ba; q }' {} +
-
+    
+      # 2. PURGE ASSETS: Delete everything that isn't a Markdown file 
+      # This prevents Hugo from indexing thousands of images in memory.
+      - name: Purge Non-Markdown Assets
+        run: |
+          find content/Aspose.Blog -type f ! -name "*.md" -delete
+      
+      # 3. Build with Memory Optimization
       - name: Build Skeleton Site
         run: |
+          # We use --parallel 1 to prevent RAM spikes
+          # We use --gc (Garbage Collection) to clear memory during the build
           hugo \
             --config "config.yml,config.staging.yml" \
             -b "https://blog-qa.aspose.com/" \
-            --minify
+            --minify \
+            --gc \
+            --parallel 1
+            
+        # 3. Build with Memory Optimization
+    #   - name: Build Skeleton Site
+    #     run: |
+    #       hugo \
+    #         --config "config.yml,config.staging.yml" \
+    #         -b "https://blog-qa.aspose.com/" \
+    #         --minify
 
       - name: Deploy Global Assets (Surgical Sync)
         env:
