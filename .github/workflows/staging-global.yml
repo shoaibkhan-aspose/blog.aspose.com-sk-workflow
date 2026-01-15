@@ -34,35 +34,43 @@ jobs:
           sudo swapon /swapfile
           free -m
 
-      # 2. REAL-TIME MEMORY MONITOR (Prints to console every 10s)
-      - name: Memory Monitor
+      # 2. VERBOSE MONITOR
+      - name: RAM Monitor
         run: |
           while true; do
             echo "--- RAM Check: $(date +'%H:%M:%S') ---"
             free -m
-            sleep 30
+            sleep 60
           done &
 
       # 2. Strip bodies: : Strip bodies so Hugo doesn't waste time rendering
       - name: Strip .MD Bodies & Purge Non-.MD Assets
         run: |
-          find content/Aspose.Blog -name "*.md" -type f -exec sed -i -e '/^---$/ { :a; n; /^---$/! ba; q }' {} +
-          find content/Aspose.Blog -type f ! -name "*.md" -delete
+            echo "Counting files in content folder..."
+            find content/Aspose.Blog -name "*.md" | wc -l
+            
+            echo "Stripping bodies and metadata..."
+            find content/Aspose.Blog -name "*.md" -type f -exec sed -i -e '/^---$/ { :a; n; /^---$/! ba; q }' {} +
+
+            echo "Purging all images/non-markdown assets..."
+            find content/Aspose.Blog -type f ! -name "*.md" -delete
+
+            echo "Preparation complete."
           
       # ---------------------------------------------------------
       # STEP 3: Memory Optimized Build - (NO MINIFY)
       # ---------------------------------------------------------
       - name: Build Skeleton Site
         env:
-            GOMAXPROCS: 2 # We can use 2 cores now because we have 30GB of Virtual RAM
+            GOMAXPROCS: 4 # We can use 2 cores now because we have 30GB of Virtual RAM
         run: |
           # We use --gc (Garbage Collection) to clear memory during the build
           hugo \
             --config "config.yml,config.staging.yml" \
             -b "https://blog-qa.aspose.com/" \
             --gc \
-            --templateMetrics \
-            --printPathWarnings
+            -- verbose \
+            --ignoreCache
 
         # 3. Build with Memory Optimization
     #   - name: Build Skeleton Site
