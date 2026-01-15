@@ -6,6 +6,7 @@ on:
 jobs:
   build-global:
     runs-on: ubuntu-latest
+    timeout-minutes: 350
     steps:
       - name: Checkout blog repo
         uses: actions/checkout@v4
@@ -39,7 +40,7 @@ jobs:
           while true; do
             echo "--- RAM Check: $(date +'%H:%M:%S') ---"
             free -m
-            sleep 10
+            sleep 30
           done &
 
       # 2. Strip bodies: : Strip bodies so Hugo doesn't waste time rendering
@@ -49,18 +50,19 @@ jobs:
           find content/Aspose.Blog -type f ! -name "*.md" -delete
           
       # ---------------------------------------------------------
-      # STEP 3: Memory Optimized Build
+      # STEP 3: Memory Optimized Build - (NO MINIFY)
       # ---------------------------------------------------------
       - name: Build Skeleton Site
         env:
-            GOMAXPROCS: 1 # Forces Hugo to use 1 worker to keep RAM low
+            GOMAXPROCS: 2 # We can use 2 cores now because we have 30GB of Virtual RAM
         run: |
           # We use --gc (Garbage Collection) to clear memory during the build
           hugo \
             --config "config.yml,config.staging.yml" \
             -b "https://blog-qa.aspose.com/" \
-            --minify \
-            --gc
+            --gc \
+            --templateMetrics \
+            --printPathWarnings
 
         # 3. Build with Memory Optimization
     #   - name: Build Skeleton Site
@@ -80,6 +82,7 @@ jobs:
           
           # Deploy Global Assets while protecting all 27 Product folders
             aws s3 sync public/ s3://blog-qa.aspose.com/ \
+            --size-only \
             --exclude "3d/*" --exclude "*/3d/*" \
             --exclude "barcode/*" --exclude "*/barcode/*" \
             --exclude "cad/*" --exclude "*/cad/*" \
