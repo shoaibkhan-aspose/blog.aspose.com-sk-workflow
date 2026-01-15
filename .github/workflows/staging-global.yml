@@ -21,51 +21,46 @@ jobs:
           hugo-version: '0.120.4'
           extended: true
 
-      # ---------------------------------------------------------
-      # STEP 1: Memory Monitor (Background Process)
-      # ---------------------------------------------------------
-      - name: Start Memory Monitor
+      # 1. FREE DISK & CREATE SWAP (Extends RAM from 7GB to 17GB)
+      - name: Extend Memory with Swap
         run: |
-          echo "Timestamp | Total | Used | Free | Available" > memory_log.txt
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo fallocate -l 10G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -m
+
+      # 2. REAL-TIME MEMORY MONITOR (Prints to console every 10s)
+      - name: Memory Monitor
+        run: |
           while true; do
-            echo "$(date +'%H:%M:%S') $(free -m | grep Mem | awk '{print " | " $2 "MB | " $3 "MB | " $4 "MB | " $7 "MB"}')" >> memory_log.txt
+            echo "--- RAM Check: $(date +'%H:%M:%S') ---"
+            free -m
             sleep 10
           done &
-          echo "MEMORY_MONITOR_PID=$!" >> $GITHUB_ENV
 
       # 2. Strip bodies: : Strip bodies so Hugo doesn't waste time rendering
-      - name: Strip Markdown Bodies
+      - name: Strip .MD Bodies & Purge Non-.MD Assets
         run: |
           find content/Aspose.Blog -name "*.md" -type f -exec sed -i -e '/^---$/ { :a; n; /^---$/! ba; q }' {} +
-    
-      # 3. PURGE ASSETS: Delete everything that isn't a Markdown file 
-      # This prevents Hugo from indexing thousands of images in memory.
-      - name: Purge Non-Markdown Assets
-        run: |
           find content/Aspose.Blog -type f ! -name "*.md" -delete
-      
-      # 3. Build with Memory Optimization
+          
+      # ---------------------------------------------------------
+      # STEP 3: Memory Optimized Build
+      # ---------------------------------------------------------
       - name: Build Skeleton Site
         env:
             GOMAXPROCS: 1 # Forces Hugo to use 1 worker to keep RAM low
         run: |
-          # We use --parallel 1 to prevent RAM spikes
           # We use --gc (Garbage Collection) to clear memory during the build
           hugo \
             --config "config.yml,config.staging.yml" \
             -b "https://blog-qa.aspose.com/" \
             --minify \
             --gc
-      # ---------------------------------------------------------
-      # STEP 4: Stop Monitor and Show Log
-      # ---------------------------------------------------------
-      - name: Stop Memory Monitor
-        if: always()
-        run: |
-          kill ${{ env.MEMORY_MONITOR_PID }} || true
-          echo "--- RAM USAGE LOG ---"
-          cat memory_log.txt
-          echo "--- END LOG ---"
 
         # 3. Build with Memory Optimization
     #   - name: Build Skeleton Site
