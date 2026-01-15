@@ -46,18 +46,24 @@ jobs:
       # 3. FAST STRIP (With xargs and Size Check)
       - name: Fast Content Preparation
         run: |
-            echo "Initial folder size:"
-            du -sh content/Aspose.Blog
+            echo "Initial folder size: $(du -sh content/Aspose.Blog)"
           
             echo "Counting files..."
             find content/Aspose.Blog -name "*.md" | wc -l
             
+            # 1. STRIP BODIES: This logic handles nested YAML and \r\n endings perfectly.
+            # It prints everything from the first line until it sees the second '---'.
+            echo "Executing AWK strip on 53k files..."
+            find content/Aspose.Blog -name "*.md" -print0 | xargs -0 -I {} -P 4 sh -c "awk '/^---/ { count++ } { print } count == 2 { exit }' '{}' > '{}.tmp' && mv '{}.tmp' '{}'"
+            
+            # ===============================
             # echo "Stripping bodies (using xargs for speed)..."
             # # -P 4 runs this on 4 CPU cores at once
-            find content/Aspose.Blog -name "*.md" -print0 | xargs -0 -P 4 sed -i -n '/^---$/!b;p;:a;n;/^---$/!{/^\(title\|date\|categories\|tags\|url\|slug\|author\):/p;ba};p;q'
+            # find content/Aspose.Blog -name "*.md" -print0 | xargs -0 -P 4 sed -i -n '/^---$/!b;p;:a;n;/^---$/!{/^\(title\|date\|categories\|tags\|url\|slug\|author\):/p;ba};p;q'
 
             # echo "Stripping bodies and metadata..."
             # find content/Aspose.Blog -name "*.md" -type f -exec sed -i -e '/^---$/ { :a; n; /^---$/! ba; q }' {} +
+            # ===============================
 
             echo "Folder size after stripping:"
             du -sh content/Aspose.Blog
@@ -68,13 +74,11 @@ jobs:
             echo "Final folder size (should be much smaller!):"
             du -sh content/Aspose.Blog
 
+            echo "Checking a random file to see if body exists:"
+            head -n 50 content/Aspose.Blog/note/2025-10-29-extract-text-from-table-in-onenote-using-csharp/index.md
+                      
             echo "Preparation complete."
 
-      - name: Verify Strip
-        run: |
-          echo "Checking a random file to see if body exists:"
-          # Replace 'path/to/any/file.md' with a real path found in your repo
-          head -n 50 content/Aspose.Blog/note/2025-10-29-extract-text-from-table-in-onenote-using-csharp/index.md
       # ---------------------------------------------------------
       # STEP 3: Memory Optimized Build - (NO MINIFY)
       # ---------------------------------------------------------
@@ -87,8 +91,8 @@ jobs:
             --config "config.yml,config.staging.yml" \
             -b "https://blog-qa.aspose.com/" \
             --gc \
-            --verbose \
-            --disableKinds taxonomy,taxonomyTerm \
+            --logLevel info \
+            --disableKinds taxonomy,taxonomyTerm,RSS,sitemap \
             --ignoreCache
 
         # 3. Build with Memory Optimization
