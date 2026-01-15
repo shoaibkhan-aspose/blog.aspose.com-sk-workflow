@@ -92,7 +92,7 @@ jobs:
             -b "https://blog-qa.aspose.com/" \
             --gc \
             --logLevel info \
-            --disableKinds taxonomy,taxonomyTerm,RSS,sitemap \
+            --disableKinds taxonomy \
             --ignoreCache
 
         # 3. Build with Memory Optimization
