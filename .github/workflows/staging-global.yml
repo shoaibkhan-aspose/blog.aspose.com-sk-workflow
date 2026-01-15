@@ -43,17 +43,27 @@ jobs:
             sleep 60
           done &
 
-      # 2. Strip bodies: : Strip bodies so Hugo doesn't waste time rendering
-      - name: Strip .MD Bodies & Purge Non-.MD Assets
+      # 3. FAST STRIP (With xargs and Size Check)
+      - name: Fast Content Preparation
         run: |
-            echo "Counting files in content folder..."
+            echo "Initial folder size:"
+            du -sh content/Aspose.Blog
+          
+            echo "Counting files..."
             find content/Aspose.Blog -name "*.md" | wc -l
             
-            echo "Stripping bodies and metadata..."
-            find content/Aspose.Blog -name "*.md" -type f -exec sed -i -e '/^---$/ { :a; n; /^---$/! ba; q }' {} +
+            echo "Stripping bodies (using xargs for speed)..."
+            # -P 4 runs this on 4 CPU cores at once
+            find content/Aspose.Blog -name "*.md" -print0 | xargs -0 -P 4 sed -i -n '/^---$/!b;p;:a;n;/^---$/!{/^\(title\|date\|categories\|tags\|url\|slug\|author\):/p;ba};p;q'
+
+            # echo "Stripping bodies and metadata..."
+            # find content/Aspose.Blog -name "*.md" -type f -exec sed -i -e '/^---$/ { :a; n; /^---$/! ba; q }' {} +
 
             echo "Purging all images/non-markdown assets..."
             find content/Aspose.Blog -type f ! -name "*.md" -delete
+          
+            echo "Final folder size (should be much smaller!):"
+            du -sh content/Aspose.Blog
 
             echo "Preparation complete."
           
@@ -69,7 +79,8 @@ jobs:
             --config "config.yml,config.staging.yml" \
             -b "https://blog-qa.aspose.com/" \
             --gc \
-            -- verbose \
+            --verbose \
+            --disableKinds taxonomy,taxonomyTerm \
             --ignoreCache
 
         # 3. Build with Memory Optimization
