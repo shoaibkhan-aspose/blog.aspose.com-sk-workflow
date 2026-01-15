@@ -52,13 +52,16 @@ jobs:
             echo "Counting files..."
             find content/Aspose.Blog -name "*.md" | wc -l
             
-            echo "Stripping bodies (using xargs for speed)..."
-            # -P 4 runs this on 4 CPU cores at once
-            find content/Aspose.Blog -name "*.md" -print0 | xargs -0 -P 4 sed -i -n '/^---$/!b;p;:a;n;/^---$/!{/^\(title\|date\|categories\|tags\|url\|slug\|author\):/p;ba};p;q'
+            # echo "Stripping bodies (using xargs for speed)..."
+            # # -P 4 runs this on 4 CPU cores at once
+            # find content/Aspose.Blog -name "*.md" -print0 | xargs -0 -P 4 sed -i -n '/^---$/!b;p;:a;n;/^---$/!{/^\(title\|date\|categories\|tags\|url\|slug\|author\):/p;ba};p;q'
 
             # echo "Stripping bodies and metadata..."
-            # find content/Aspose.Blog -name "*.md" -type f -exec sed -i -e '/^---$/ { :a; n; /^---$/! ba; q }' {} +
+            find content/Aspose.Blog -name "*.md" -type f -exec sed -i -e '/^---$/ { :a; n; /^---$/! ba; q }' {} +
 
+            echo "Folder size after stripping:"
+            du -sh content/Aspose.Blog
+            
             echo "Purging all images/non-markdown assets..."
             find content/Aspose.Blog -type f ! -name "*.md" -delete
           
@@ -66,7 +69,12 @@ jobs:
             du -sh content/Aspose.Blog
 
             echo "Preparation complete."
-          
+
+      - name: Verify Strip
+        run: |
+          echo "Checking a random file to see if body exists:"
+          # Replace 'path/to/any/file.md' with a real path found in your repo
+          head -n 50 content/Aspose.Blog/note/2025-10-29-extract-text-from-table-in-onenote-using-csharp/index.md
       # ---------------------------------------------------------
       # STEP 3: Memory Optimized Build - (NO MINIFY)
       # ---------------------------------------------------------
