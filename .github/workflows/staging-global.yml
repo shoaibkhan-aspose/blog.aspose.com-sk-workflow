@@ -34,7 +34,16 @@ jobs:
           sudo swapon /swapfile
           free -m
 
-      # 2. VERBOSE MONITOR
+      # 2. CACHE HUGO RESOURCES (Speed Boost)
+      - name: Cache Hugo Resources
+        uses: actions/cache@v4
+        with:
+          path: resources
+          key: ${{ runner.os }}-hugo-cache-${{ hashFiles('config.yml', 'config.staging.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-hugo-cache-
+
+      # 3. VERBOSE MONITOR
       - name: RAM Monitor
         run: |
           while true; do
@@ -43,7 +52,7 @@ jobs:
             sleep 60
           done &
 
-      # 3. FAST STRIP (With xargs and Size Check)
+      # 4. FAST STRIP (With xargs and Size Check)
       - name: Fast Content Preparation
         run: |
             echo "Initial folder size: $(du -sh content/Aspose.Blog)"
