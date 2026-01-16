@@ -48,31 +48,39 @@ jobs:
         run: |
             echo "Initial folder size: $(du -sh content/Aspose.Blog)"
           
+            # =======================================================
+            # Count
+            # =======================================================
+
             echo "Counting files..."
             find content/Aspose.Blog -name "*.md" | wc -l
             
+            # =======================================================
             # 1. STRIP BODIES: This logic handles nested YAML and \r\n endings perfectly.
             # It prints everything from the first line until it sees the second '---'.
+            # =======================================================
+
             echo "Executing AWK strip on 53k files..."
             find content/Aspose.Blog -name "*.md" -print0 | xargs -0 -I {} -P 4 sh -c "awk '/^---/ { count++ } { print } count == 2 { exit }' '{}' > '{}.tmp' && mv '{}.tmp' '{}'"
             
-            # ===============================
-            # echo "Stripping bodies (using xargs for speed)..."
-            # # -P 4 runs this on 4 CPU cores at once
-            # find content/Aspose.Blog -name "*.md" -print0 | xargs -0 -P 4 sed -i -n '/^---$/!b;p;:a;n;/^---$/!{/^\(title\|date\|categories\|tags\|url\|slug\|author\):/p;ba};p;q'
+            # =======================================================
 
-            # echo "Stripping bodies and metadata..."
-            # find content/Aspose.Blog -name "*.md" -type f -exec sed -i -e '/^---$/ { :a; n; /^---$/! ba; q }' {} +
-            # ===============================
+            echo "Folder size after stripping: $(du -sh content/Aspose.Blog)"
 
-            echo "Folder size after stripping:"
-            du -sh content/Aspose.Blog
+            # =======================================================
+            # PURGE - Keeping all .MD and images
+            # =======================================================
+            # echo "Purging all images/non-markdown assets..."
+            # find content/Aspose.Blog -type f ! -name "*.md" -delete
             
-            echo "Purging all images/non-markdown assets..."
-            find content/Aspose.Blog -type f ! -name "*.md" -delete
+            # 2. SELECTIVE PURGE: Keep MD and Images, Delete everything else (PDF, ZIP, etc.)
+            echo "Purging heavy non-image assets..."
+            find content/Aspose.Blog -type f ! \( -name "*.md" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" \) -delete
+            # =======================================================
           
-            echo "Final folder size (should be much smaller!):"
-            du -sh content/Aspose.Blog
+            echo "Final folder size: $(du -sh content/Aspose.Blog)"
+
+            # =======================================================
 
             echo "Checking a random file to see if body exists:"
             head -n 50 content/Aspose.Blog/note/2025-10-29-extract-text-from-table-in-onenote-using-csharp/index.md
@@ -91,9 +99,7 @@ jobs:
             --config "config.yml,config.staging.yml" \
             -b "https://blog-qa.aspose.com/" \
             --gc \
-            --logLevel info \
-            --disableKinds taxonomy \
-            --ignoreCache
+            --logLevel info
 
         # 3. Build with Memory Optimization
     #   - name: Build Skeleton Site
@@ -114,6 +120,8 @@ jobs:
           # Deploy Global Assets while protecting all 27 Product folders
             aws s3 sync public/ s3://blog-qa.aspose.com/ \
             --size-only \
+            --exclude "tag/*" \
+            --exclude "*/tag/*" \
             --exclude "3d/*" --exclude "*/3d/*" \
             --exclude "barcode/*" --exclude "*/barcode/*" \
             --exclude "cad/*" --exclude "*/cad/*" \
